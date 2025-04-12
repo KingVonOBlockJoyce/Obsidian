@@ -1878,8 +1878,8 @@ do
         function ColorPicker:Update()
             ColorPicker:Display()
 
-            Library:SafeCallback(ColorPicker.Callback, ColorPicker.Value)
-            Library:SafeCallback(ColorPicker.Changed, ColorPicker.Value)
+            Library:SafeCallback(ColorPicker.Callback, ColorPicker.Value, ColorPicker.Transparency)
+            Library:SafeCallback(ColorPicker.Changed, ColorPicker.Value, ColorPicker.Transparency)
         end
 
         function ColorPicker:OnChanged(Func)
