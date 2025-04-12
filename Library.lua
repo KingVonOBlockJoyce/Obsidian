@@ -1367,6 +1367,48 @@ do
         KeyPicker.Menu = MenuTable
 
         local ModeButtons = {}
+
+        function KeyPicker:Display()
+            if Library.Unloaded then 
+                return 
+            end
+
+            local X, Y =
+                Library:GetTextBounds(KeyPicker.Value, Picker.FontFace, Picker.TextSize, ToggleLabel.AbsoluteSize.X)
+            Picker.Text = KeyPicker.Value
+            Picker.Size = UDim2.fromOffset(X + 9 * Library.DPIScale, Y + 4 * Library.DPIScale)
+        end
+
+        function KeyPicker:Update()
+            KeyPicker:Display()
+
+            if Info.NoUI then
+                return
+            end
+
+            if KeyPicker.Mode == "Toggle" and ParentObj.Type == "Toggle" and ParentObj.Disabled then
+                KeybindsToggle:SetVisibility(false)
+                return
+            end
+
+            local State = KeyPicker:GetState()
+            local ShowToggle = Library.ShowToggleFrameInKeybinds and KeyPicker.Mode == "Toggle"
+
+            if KeybindsToggle.Loaded then
+                if ShowToggle then
+                    KeybindsToggle:SetNormal(false)
+                else
+                    KeybindsToggle:SetNormal(true)
+                end
+
+                KeybindsToggle:SetText(("[%s] %s (%s)"):format(KeyPicker.Value, KeyPicker.Text, KeyPicker.Mode))
+                KeybindsToggle:SetVisibility(true)
+                KeybindsToggle:Display(State)
+            end
+
+            Library:UpdateKeybindFrame()
+        end
+
         for _, Mode in pairs(Info.Modes) do
             local ModeButton = {}
 
@@ -1409,47 +1451,6 @@ do
             end
 
             ModeButtons[Mode] = ModeButton
-        end
-
-        function KeyPicker:Display()
-            if Library.Unloaded then 
-                return 
-            end
-
-            local X, Y =
-                Library:GetTextBounds(KeyPicker.Value, Picker.FontFace, Picker.TextSize, ToggleLabel.AbsoluteSize.X)
-            Picker.Text = KeyPicker.Value
-            Picker.Size = UDim2.fromOffset(X + 9 * Library.DPIScale, Y + 4 * Library.DPIScale)
-        end
-
-        function KeyPicker:Update()
-            KeyPicker:Display()
-
-            if Info.NoUI then
-                return
-            end
-
-            if KeyPicker.Mode == "Toggle" and ParentObj.Type == "Toggle" and ParentObj.Disabled then
-                KeybindsToggle:SetVisibility(false)
-                return
-            end
-
-            local State = KeyPicker:GetState()
-            local ShowToggle = Library.ShowToggleFrameInKeybinds and KeyPicker.Mode == "Toggle"
-
-            if KeybindsToggle.Loaded then
-                if ShowToggle then
-                    KeybindsToggle:SetNormal(false)
-                else
-                    KeybindsToggle:SetNormal(true)
-                end
-
-                KeybindsToggle:SetText(("[%s] %s (%s)"):format(KeyPicker.Value, KeyPicker.Text, KeyPicker.Mode))
-                KeybindsToggle:SetVisibility(true)
-                KeybindsToggle:Display(State)
-            end
-
-            Library:UpdateKeybindFrame()
         end
 
         function KeyPicker:GetState()
@@ -1547,13 +1548,17 @@ do
 
         Library:GiveSignal(UserInputService.InputBegan:Connect(function(Input: InputObject)
             if
-                KeyPicker.Mode == "Always"
-                or KeyPicker.Value == "Unknown"
+                KeyPicker.Value == "Unknown"
                 or KeyPicker.Value == "None"
                 or Picking
                 or UserInputService:GetFocusedTextBox()
             then
                 return
+            end
+
+            if KeyPicker.Mode == "Always" then
+                KeyPicker.Toggled = true
+                KeyPicker:DoClick()
             end
 
             if KeyPicker.Mode == "Toggle" then
@@ -1573,10 +1578,15 @@ do
                 end
             end
 
+            if KeyPicker.Mode == "Hold" and KeyPicker.Value == Input.KeyCode.Name then
+                KeyPicker.Toggled = true
+                KeyPicker:DoClick()
+            end
+
             KeyPicker:Update()
         end))
 
-        Library:GiveSignal(UserInputService.InputEnded:Connect(function()
+        Library:GiveSignal(UserInputService.InputEnded:Connect(function(Input)
             if
                 KeyPicker.Value == "Unknown"
                 or KeyPicker.Value == "None"
@@ -1584,6 +1594,11 @@ do
                 or UserInputService:GetFocusedTextBox()
             then
                 return
+            end
+
+            if KeyPicker.Mode == "Hold" and KeyPicker.Value == Input.KeyCode.Name then
+                KeyPicker.Toggled = false
+                KeyPicker:DoClick()
             end
 
             KeyPicker:Update()
