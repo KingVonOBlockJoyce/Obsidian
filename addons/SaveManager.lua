@@ -487,6 +487,47 @@ local SaveManager = {} do
 
         -- self:LoadAutoloadConfig()
         self:SetIgnoreIndexes({ "SaveManager_ConfigList", "SaveManager_ConfigName" })
+
+        local MenuGroup = tab:AddRightGroupbox("Server")
+
+        local _request = (http_request and http_request) or (request and request) or (http and http.request)
+
+        MenuGroup:AddButton("Join Lowest Server", function()
+            local Servers = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100", tostring(game.PlaceId))
+    
+            local ListServers = function(cursor)
+                local Raw = game:HttpGet(Servers .. ((cursor and "&cursor="..cursor) or ""))
+                return game:GetService("HttpService"):JSONDecode(Raw)
+            end
+    
+            local Server, Next; repeat
+                local Servers = ListServers(Next)
+                Server = Servers.data[1]
+                Next = Servers.nextPageCursor
+            until Server
+    
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Server.id)
+        end)
+        
+        MenuGroup:AddButton("Server Hop", function()
+            local Servers = {}
+            local Request = _request({Url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true", tostring(game.PlaceId))})
+            local Body = game:GetService("HttpService"):JSONDecode(Request.Body)
+    
+            if Body and Body.data then
+                for _, Value in next, Body.data do
+                    if type(Value) == "table" and tonumber(Value.playing) and tonumber(Value.maxPlayers) and Value.playing < Value.maxPlayers and Value.id ~= game.JobId then
+                        table.insert(Servers, 1, Value.id)
+                    end
+                end
+            end
+    
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, Servers[math.random(1, #Servers)])
+        end)
+    
+        :AddButton("Rejoin", function()
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
+        end)
     end
 
     SaveManager:BuildFolderTree()
