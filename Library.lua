@@ -1494,6 +1494,7 @@ function Library:AddDraggableLabel(Text: string)
         Size = UDim2.fromOffset(0, 0),
         Position = UDim2.fromOffset(6, 6),
         Text = Text,
+        RichText = true,
         TextSize = 15,
         ZIndex = 10,
         Parent = ScreenGui,
