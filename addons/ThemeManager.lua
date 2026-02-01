@@ -69,7 +69,7 @@ do
         },
         ["Tokyo Night"] = {
             6,
-            { FontColor = "ffffff", MainColor = "191925", AccentColor = "6759b3", BackgroundColor = "16161f", OutlineColor = "323232" },
+            { FontColor = "ffffff", MainColor = "191925", AccentColor = "6759b3", BackgroundColor = "16161f", OutlineColor = "242336" },
         },
         ["Ubuntu"] = {
             7,
